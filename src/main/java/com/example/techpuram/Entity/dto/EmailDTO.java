@@ -1,28 +1,29 @@
+// Updated EmailDTO
 package com.example.techpuram.Entity.dto;
 
 public class EmailDTO {
-    private String from;
-    private String to;
+    private String fromAddress;
+    private String toAddress;
     private String subject;
     private String body;
-    private String cc;  // Change here: cc is now a String
+    private String ccAddress;
 
-    // Getter and Setter for 'from'
-    public String getFrom() {
-        return from;
+    // Getter and Setter for 'fromAddress'
+    public String getFromAddress() {
+        return fromAddress;
     }
 
-    public void setFrom(String from) {
-        this.from = from;
+    public void setFromAddress(String fromAddress) {
+        this.fromAddress = fromAddress;
     }
 
-    // Getter and Setter for 'to'
-    public String getTo() {
-        return to;
+    // Getter and Setter for 'toAddress'
+    public String getToAddress() {
+        return toAddress;
     }
 
-    public void setTo(String to) {
-        this.to = to;
+    public void setToAddress(String toAddress) {
+        this.toAddress = toAddress;
     }
 
     // Getter and Setter for 'subject'
@@ -43,12 +44,12 @@ public class EmailDTO {
         this.body = body;
     }
 
-    // Getter and Setter for 'cc' (now as a single String)
-    public String getCc() {
-        return cc;
+    // Getter and Setter for 'ccAddress'
+    public String getCcAddress() {
+        return ccAddress;
     }
 
-    public void setCc(String cc) {
-        this.cc = cc;
+    public void setCcAddress(String ccAddress) {
+        this.ccAddress = ccAddress;
     }
 }

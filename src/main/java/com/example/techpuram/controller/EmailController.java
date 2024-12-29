@@ -7,8 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-
-
 @RestController
 @RequestMapping("/api/email")
 public class EmailController {
@@ -28,6 +26,4 @@ public class EmailController {
                                  .body("Error sending email: " + e.getMessage());
         }
     }
-
-  
 }
