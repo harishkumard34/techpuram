@@ -11,10 +11,6 @@ import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-
 @Service
 public class EmailService {
 
@@ -62,70 +58,5 @@ public class EmailService {
     }
 
     // Method to receive and print email details (from, to, subject, body, cc)
-    public List<EmailDTO> receiveEmail() {
-        List<EmailDTO> emailDTOList = new ArrayList<>(); // Initialize the list to hold EmailDTO objects
-
-        try {
-            // Set IMAP properties
-            Properties props = new Properties();
-            props.put("mail.imap.host", "imap.gmail.com");
-            props.put("mail.imap.port", "993");
-            props.put("mail.imap.ssl.enable", "true");
-
-            // Create a mail session
-            Session emailSession = Session.getDefaultInstance(props);
-            Store store = emailSession.getStore("imap");
-            store.connect("imap.gmail.com", "your-email@gmail.com", "your-email-password");
-
-            // Open inbox folder
-            Folder folder = store.getFolder("INBOX");
-            folder.open(Folder.READ_ONLY);
-
-            // Fetch and print email details
-            Message[] messages = folder.getMessages();
-            logger.info("Number of messages: {}", messages.length);
-
-            for (Message message : messages) {
-                // Extract email details
-                String from = ((InternetAddress) message.getFrom()[0]).getAddress();
-                String to = ((InternetAddress) message.getAllRecipients()[0]).getAddress();
-                String subject = message.getSubject();
-                String body = message.getContent().toString();
-                String cc = "";
-
-                if (message.getRecipients(Message.RecipientType.CC) != null) {
-                    // Join the CC recipients into a comma-separated string
-                    cc = String.join(", ", (CharSequence[]) message.getRecipients(Message.RecipientType.CC));
-                }
-
-                // Create a new EmailDTO object and set its fields
-                EmailDTO emailDTO = new EmailDTO();
-                emailDTO.setFrom(from);
-                emailDTO.setTo(to);
-                emailDTO.setSubject(subject);
-                emailDTO.setBody(body);
-                emailDTO.setCc(cc); // Set the cc as a string
-
-                // Add the EmailDTO object to the list
-                emailDTOList.add(emailDTO);
-
-                // Log the email details (optional)
-                logger.info("From: {}", from);
-                logger.info("To: {}", to);
-                logger.info("Subject: {}", subject);
-                logger.info("Body: {}", body);
-                logger.info("CC: {}", cc);
-            }
-
-            // Close folder and store
-            folder.close(false);
-            store.close();
-
-        } catch (Exception e) {
-            logger.error("Error in receiving emails: {}", e.getMessage(), e);
-        }
-
-        // Return the list of EmailDTO objects
-        return emailDTOList;
-    }
+   
 }
