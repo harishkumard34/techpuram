@@ -5,6 +5,7 @@ CREATE TABLE emails (
     subject VARCHAR(255),               -- Email subject (optional)
     body TEXT,                          -- Email body (long text)
     cc_address VARCHAR(255),            -- CC address (optional)
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP -- Timestamp for when the record is created
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP 
+    uid VARCHAR(255) UNIQUE  -- Timestamp for when the record is created
 );
  

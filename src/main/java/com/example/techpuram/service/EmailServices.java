@@ -4,11 +4,13 @@ import jakarta.mail.*;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMultipart;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import com.example.techpuram.Entity.dto.Email;
 import com.example.techpuram.Entity.dto.EmailRepository;
 
+import org.eclipse.angus.mail.imap.IMAPFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,6 +24,7 @@ public class EmailServices {
     @Autowired
     private EmailRepository emailRepository;
 
+    @Scheduled(fixedRate = 5000) // Run every 5 seconds
     public void fetchAndSaveEmails() {
         try {
             // IMAP Server properties
@@ -37,27 +40,33 @@ public class EmailServices {
             store.connect("imap.hostinger.com", "harishkumar.d@techpuram.com", "n#U~5|9D");
 
             // Open the INBOX folder
-            Folder inbox = store.getFolder("INBOX");
+            IMAPFolder inbox = (IMAPFolder) store.getFolder("INBOX");
             inbox.open(Folder.READ_ONLY);
 
-            // Fetch messages
-            Message[] messages = inbox.getMessages();
+            // Fetch the last processed UID from the database or initialize with 0
+            long lastProcessedUID = emailRepository.findMaxUid().orElse(0L); // Assuming a custom query
+
+            // Fetch only emails with UID greater than the last processed UID
+            Message[] messages = inbox.getMessagesByUID(lastProcessedUID + 1, Long.MAX_VALUE);
+
             for (Message message : messages) {
+                long uid = inbox.getUID(message);
+
+                // Create and populate the Email entity
                 Email email = new Email();
+                email.setUid(String.valueOf(uid));
                 email.setFromAddress(((InternetAddress) message.getFrom()[0]).getAddress());
                 email.setToAddress(((InternetAddress) message.getRecipients(Message.RecipientType.TO)[0]).getAddress());
                 email.setSubject(message.getSubject());
-                email.setBody(extractEmailBody(message)); // Extract the email body properly
+                email.setBody(extractEmailBody(message));
 
                 if (message.getRecipients(Message.RecipientType.CC) != null) {
                     email.setCcAddress(((InternetAddress) message.getRecipients(Message.RecipientType.CC)[0]).getAddress());
                 }
 
-                // Save to database
+                // Save the email
                 emailRepository.save(email);
-
-                // Log success message using the logger
-                logger.info("Email saved successfully: {}", email);
+                logger.info("New email saved successfully: {}", email);
             }
 
             inbox.close(false);
@@ -70,22 +79,20 @@ public class EmailServices {
     private String extractEmailBody(Message message) throws MessagingException, IOException {
         Object content = message.getContent();
         if (content instanceof String textContent) {
-            return textContent; // For simple text emails
+            return textContent;
         } else if (content instanceof MimeMultipart mimeMultipart) {
-            return getTextFromMimeMultipart(mimeMultipart); // Handle multipart emails
+            return getTextFromMimeMultipart(mimeMultipart);
         }
         return "Unsupported email content type";
     }
 
     private String getTextFromMimeMultipart(MimeMultipart mimeMultipart) throws MessagingException, IOException {
         StringBuilder result = new StringBuilder();
-        int count = mimeMultipart.getCount();
-        for (int i = 0; i < count; i++) {
+        for (int i = 0; i < mimeMultipart.getCount(); i++) {
             BodyPart bodyPart = mimeMultipart.getBodyPart(i);
             if (bodyPart.isMimeType("text/plain")) {
                 result.append(bodyPart.getContent());
             } else if (bodyPart.isMimeType("text/html")) {
-                // Optional: Choose to prefer plain text or HTML
                 result.append(bodyPart.getContent());
             } else if (bodyPart.getContent() instanceof MimeMultipart nestedMultipart) {
                 result.append(getTextFromMimeMultipart(nestedMultipart));
