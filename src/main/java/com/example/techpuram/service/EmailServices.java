@@ -1,15 +1,14 @@
 package com.example.techpuram.service;
 
 import jakarta.mail.*;
+import jakarta.mail.event.MessageCountAdapter;
+import jakarta.mail.event.MessageCountEvent;
 import jakarta.mail.internet.InternetAddress;
 import jakarta.mail.internet.MimeMultipart;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-
 import com.example.techpuram.Entity.dto.Email;
 import com.example.techpuram.Entity.dto.EmailRepository;
-
 import org.eclipse.angus.mail.imap.IMAPFolder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,8 +23,9 @@ public class EmailServices {
     @Autowired
     private EmailRepository emailRepository;
 
-    @Scheduled(fixedRate = 5000) // Run every 5 seconds
-    public void fetchAndSaveEmails() {
+    private volatile boolean running = true;
+
+    public void connectAndListenForEmails() {
         try {
             // IMAP Server properties
             Properties properties = new Properties();
@@ -34,7 +34,7 @@ public class EmailServices {
             properties.put("mail.imap.ssl.enable", "true");
             properties.put("mail.imap.auth", "true");
 
-            // Session and Store
+            // Create Session and Store
             Session session = Session.getInstance(properties);
             Store store = session.getStore("imap");
             store.connect("imap.hostinger.com", "harishkumar.d@techpuram.com", "n#U~5|9D");
@@ -43,37 +43,56 @@ public class EmailServices {
             IMAPFolder inbox = (IMAPFolder) store.getFolder("INBOX");
             inbox.open(Folder.READ_ONLY);
 
-            // Fetch the last processed UID from the database or initialize with 0
-            long lastProcessedUID = emailRepository.findMaxUid().orElse(0L); // Assuming a custom query
-
-            // Fetch only emails with UID greater than the last processed UID
-            Message[] messages = inbox.getMessagesByUID(lastProcessedUID + 1, Long.MAX_VALUE);
-
-            for (Message message : messages) {
-                long uid = inbox.getUID(message);
-
-                // Create and populate the Email entity
-                Email email = new Email();
-                email.setUid(String.valueOf(uid));
-                email.setFromAddress(((InternetAddress) message.getFrom()[0]).getAddress());
-                email.setToAddress(((InternetAddress) message.getRecipients(Message.RecipientType.TO)[0]).getAddress());
-                email.setSubject(message.getSubject());
-                email.setBody(extractEmailBody(message));
-
-                if (message.getRecipients(Message.RecipientType.CC) != null) {
-                    email.setCcAddress(((InternetAddress) message.getRecipients(Message.RecipientType.CC)[0]).getAddress());
+            // Add a listener for new messages
+            inbox.addMessageCountListener(new MessageCountAdapter() {
+                @Override
+                public void messagesAdded(MessageCountEvent event) {
+                    Message[] messages = event.getMessages();
+                    for (Message message : messages) {
+                        try {
+                            processAndSaveEmail(inbox, message);
+                        } catch (Exception e) {
+                            logger.error("Error processing new email", e);
+                        }
+                    }
                 }
+            });
 
-                // Save the email
-                emailRepository.save(email);
-                logger.info("New email saved successfully: {}", email);
+            // Listen for new messages in a loop
+            while (running) {
+                inbox.idle();
             }
 
             inbox.close(false);
             store.close();
         } catch (Exception e) {
-            logger.error("Error while fetching and saving emails", e);
+            logger.error("Error while connecting and listening for emails", e);
         }
+    }
+
+    private void processAndSaveEmail(IMAPFolder inbox, Message message) throws MessagingException, IOException {
+        long uid = inbox.getUID(message);
+
+        // Skip if email UID already exists
+        if (emailRepository.existsByUid(String.valueOf(uid))) {
+            return;
+        }
+
+        // Create and populate the Email entity
+        Email email = new Email();
+        email.setUid(String.valueOf(uid));
+        email.setFromAddress(((InternetAddress) message.getFrom()[0]).getAddress());
+        email.setToAddress(((InternetAddress) message.getRecipients(Message.RecipientType.TO)[0]).getAddress());
+        email.setSubject(message.getSubject());
+        email.setBody(extractEmailBody(message));
+
+        if (message.getRecipients(Message.RecipientType.CC) != null) {
+            email.setCcAddress(((InternetAddress) message.getRecipients(Message.RecipientType.CC)[0]).getAddress());
+        }
+
+        // Save the email
+        emailRepository.save(email);
+        logger.info("New email saved successfully: {}", email);
     }
 
     private String extractEmailBody(Message message) throws MessagingException, IOException {
@@ -100,5 +119,8 @@ public class EmailServices {
         }
         return result.toString();
     }
-}
 
+    public void stopListening() {
+        this.running = false;
+    }
+}

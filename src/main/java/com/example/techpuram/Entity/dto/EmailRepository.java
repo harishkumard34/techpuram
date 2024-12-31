@@ -15,3 +15,4 @@ public interface EmailRepository extends JpaRepository<Email, Long> {
     Optional<Long> findMaxUid();
 }
 
+
