@@ -1,4 +1,3 @@
-// Updated EmailDTO
 package com.example.techpuram.Entity.dto;
 
 public class EmailDTO {
@@ -7,6 +6,7 @@ public class EmailDTO {
     private String subject;
     private String body;
     private String ccAddress;
+    private Long templateId;  // Add templateId
 
     // Getter and Setter for 'fromAddress'
     public String getFromAddress() {
@@ -51,5 +51,14 @@ public class EmailDTO {
 
     public void setCcAddress(String ccAddress) {
         this.ccAddress = ccAddress;
+    }
+
+    // Getter and Setter for 'templateId'
+    public Long getTemplateId() {
+        return templateId;
+    }
+
+    public void setTemplateId(Long templateId) {
+        this.templateId = templateId;
     }
 }
