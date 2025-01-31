@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/email")
+@CrossOrigin(origins = "http://localhost:5173")  // Allow CORS for the frontend on port 5173
 public class EmailController {
 
     @Autowired
@@ -27,3 +28,4 @@ public class EmailController {
         }
     }
 }
+ 
