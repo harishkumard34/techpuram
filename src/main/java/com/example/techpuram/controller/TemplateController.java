@@ -12,6 +12,8 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/templates")
+
+@CrossOrigin(origins = "http://localhost:5173")  // Allow CORS for the frontend on port 5173
 public class TemplateController {
 
     @Autowired
