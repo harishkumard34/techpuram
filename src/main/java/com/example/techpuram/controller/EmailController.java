@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 public class EmailController {
 
     @Autowired
-    private EmailService emailService;
+    private EmailService emailService;//service
 
     // POST endpoint to send an email
     @PostMapping("/send")
