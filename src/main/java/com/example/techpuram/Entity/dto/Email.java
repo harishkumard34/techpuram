@@ -19,6 +19,7 @@ public class Email {
 
     private String ccAddress;
 
+
     @Column(unique = true) // Ensure UIDs are unique
     private String uid;
 

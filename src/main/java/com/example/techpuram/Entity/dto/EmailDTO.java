@@ -6,6 +6,7 @@ public class EmailDTO {
     private String subject;
     private String body;
     private String ccAddress;
+    private String bccAddress; 
     private Long templateId;  // Add templateId
 
     // Getter and Setter for 'fromAddress'
@@ -52,6 +53,16 @@ public class EmailDTO {
     public void setCcAddress(String ccAddress) {
         this.ccAddress = ccAddress;
     }
+
+   
+    public String getBccAddress() {
+        return bccAddress;
+    }
+
+    public void setBccAddress(String bccAddress) {
+        this.bccAddress = bccAddress;
+
+    }    
 
     // Getter and Setter for 'templateId'
     public Long getTemplateId() {

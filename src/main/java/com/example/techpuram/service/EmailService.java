@@ -12,7 +12,7 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 @Service
-public class EmailService {
+public class EmailService { 
 
     private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
 
@@ -52,6 +52,12 @@ public class EmailService {
                 helper.setCc(emailDTO.getCcAddress());
             }
 
+            if (emailDTO.getBccAddress() != null && !emailDTO.getBccAddress().isEmpty()) {
+                helper.setBcc(emailDTO.getBccAddress());
+            }
+
+               // Optional: Set BCC addresses if provided in the EmailDTO
+           
             // Send the email using JavaMailSender
             javaMailSender.send(message);
             logger.info("Email Sent Successfully!"); // Log success message
