@@ -12,26 +12,26 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 
 @Service
-public class EmailService { 
+public class EmailService {
 
     private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
 
     @Autowired
-    private JavaMailSender javaMailSender; // Spring-provided email utility for sending messages
+    private JavaMailSender javaMailSender;
 
     @Autowired
-    private TemplateService templateService; // Service to fetch email templates from the database
+    private TemplateService templateService;
 
     /**
      * Method to send an email based on provided EmailDTO and template information.
-     * 
+     *
      * @param emailDTO Data transfer object containing email details
      */
     public void sendEmail(EmailDTO emailDTO) {
         try {
             // Fetch template by ID using the TemplateService
             Template template = templateService.getTemplateById(emailDTO.getTemplateId())
-                    .orElseThrow(() -> new Exception("Template not found")); // Throw exception if template doesn't exist
+                    .orElseThrow(() -> new Exception("Template not found"));
 
             // Determine subject and body: use EmailDTO values if provided, otherwise fallback to template values
             String subject = emailDTO.getSubject() != null ? emailDTO.getSubject() : template.getSubject();
@@ -39,37 +39,33 @@ public class EmailService {
 
             // Create MIME message object to compose the email
             var message = javaMailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true); // Helper to set email properties
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
 
             // Set basic email properties
-            helper.setFrom(emailDTO.getFromAddress()); // Sender's address
-            helper.setTo(emailDTO.getToAddress()); // Recipient's address
-            helper.setSubject(subject); // Email subject
-            helper.setText(body); // Email body content
+            helper.setFrom(emailDTO.getFromAddress());
+            helper.setTo(emailDTO.getToAddress());
+            helper.setSubject(subject);
+            helper.setText(body, true); // Set email body as HTML
 
             // Optional: Set CC addresses if provided in the EmailDTO
             if (emailDTO.getCcAddress() != null && !emailDTO.getCcAddress().isEmpty()) {
                 helper.setCc(emailDTO.getCcAddress());
             }
 
+            // Optional: Set BCC addresses if provided in the EmailDTO
             if (emailDTO.getBccAddress() != null && !emailDTO.getBccAddress().isEmpty()) {
                 helper.setBcc(emailDTO.getBccAddress());
             }
 
-               // Optional: Set BCC addresses if provided in the EmailDTO
-           
             // Send the email using JavaMailSender
             javaMailSender.send(message);
-            logger.info("Email Sent Successfully!"); // Log success message
+            logger.info("Email Sent Successfully!");
 
         } catch (MailException e) {
-            // Log error related to sending the email
             logger.error("Error in sending email: {}", e.getMessage(), e);
         } catch (MessagingException e) {
-            // Log error related to setting up the email properties
             logger.error("Error in setting email properties: {}", e.getMessage(), e);
         } catch (Exception e) {
-            // Catch-all for other exceptions, e.g., Template not found
             logger.error("Error: {}", e.getMessage(), e);
         }
     }
