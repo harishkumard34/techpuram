@@ -1,4 +1,3 @@
-Complete Email Composer with Template Management
 
 <script lang="ts">
   import { onMount } from 'svelte';
