@@ -83,7 +83,7 @@
       bccAddress: bcc,
       subject: subject,
       body: body,
-      templateId: currentTemplateId,
+      templateId: 1,
     };
 
     try {
